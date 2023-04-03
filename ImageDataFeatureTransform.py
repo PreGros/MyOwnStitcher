@@ -3,8 +3,8 @@ import numpy as np
 
 class ImageDataFeatureTransform:
 
-    def __init__(self, imagePath: str, prevImageData: 'ImageDataFeatureTransform'):
-        self.__rawImageData = self.__getRawImageData(imagePath)
+    def __init__(self, imagePath: str, prevImageData: 'ImageDataFeatureTransform', scaleFactor):
+        self.__rawImageData = self.__getRawImageData(imagePath, scaleFactor)
         self.__foundKeyPoints, self.__foundDescriptors = self.__getFeatures()
         self.__transformationMatrix = self.__getTransformationMatrix(prevImageData)
         self.__warpedPoints = self.__getWarpedPoints()
@@ -39,8 +39,14 @@ class ImageDataFeatureTransform:
 
         return H
 
-    def __getRawImageData(self, imgPath):
-        return cv2.imread(imgPath)
+    def __getRawImageData(self, imgPath, scaleFactor):
+        if (scaleFactor == 1.0):
+            return cv2.imread(imgPath)
+        else:
+            rawImgData = cv2.imread(imgPath)
+            width = int(rawImgData.shape[1] * scaleFactor)
+            height = int(rawImgData.shape[0] * scaleFactor)
+            return cv2.resize(rawImgData, (width, height))
 
     def __getTransformationMatrix(self, prevImageData: 'ImageDataFeatureTransform'): 
         if (prevImageData != None):

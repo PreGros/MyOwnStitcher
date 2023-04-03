@@ -24,6 +24,7 @@ parser.add_argument('-gpsS', help='create map using only gps information', actio
 parser.add_argument('-ftS', help='create map using only feature matching', action='store_true')
 parser.add_argument('-mask', help='should stitcher use mask to remove black corners on rotated images', action='store_true')
 parser.add_argument('-outputName', metavar='-o', type=str, default="stitcherOutput", help='output file name')
+parser.add_argument('-scale', type=float, default=1.0, help='scale sizes of images')
 
 args = parser.parse_args()
 
@@ -43,7 +44,7 @@ if (args.gpsS):
 
 if (args.ftS):
     imgDataList = ImagesList()
-    imgDataList.runFeatureTransform(args.infile)
+    imgDataList.runFeatureTransform(args.infile, args.scale)
     stitchDataset(imgDataList.imageDataList, args.outputName, args.mask)
 
 # End timer
