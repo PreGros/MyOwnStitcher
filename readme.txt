@@ -4,4 +4,4 @@ Features:
     - masking rotated images
 
 Optimalizations:
-    - features are stored in class for ftS stitch and future use
+    - features are stored in class for ftS stitch and future use (40s->20s)
