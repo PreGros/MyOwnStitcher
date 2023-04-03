@@ -39,7 +39,7 @@ if (args.gpsS == True and args.ftS == True):
 
 if (args.gpsS):
     imgDataList = ImagesList()
-    imgDataList.runGPSTransform(args.infile)
+    imgDataList.runGPSTransform(args.infile, args.scale)
     stitchDataset(imgDataList.imageDataList, args.outputName, args.mask)
 
 if (args.ftS):

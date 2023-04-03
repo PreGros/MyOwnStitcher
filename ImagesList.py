@@ -16,11 +16,11 @@ class ImagesList:
                                                                 scaleFactor) 
                                      )
 
-    def runGPSTransform(self, path: str):
+    def runGPSTransform(self, path: str, scaleFactor):
         pathsList = sorted(glob.glob("{0}/*.jpg".format(path)))
 
         for imgPath in pathsList:
-            self.imageDataList.append(ImageDataGpsTransform(imgPath))
+            self.imageDataList.append(ImageDataGpsTransform(imgPath, scaleFactor))
         
         
         

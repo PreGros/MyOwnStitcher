@@ -11,16 +11,22 @@ BASEANGLE = -1
 
 class ImageDataGpsTransform:
 
-    def __init__(self, imagePath: str):
-        self.__rawImageData = self.__getRawImageData(imagePath)
+    def __init__(self, imagePath: str, scaleFactor):
+        self.__rawImageData = self.__getRawImageData(imagePath, scaleFactor)
         self.__transformationMatrix = self.__getTransformationMatrix(imagePath)
         self.__warpedPoints = self.getWarpedPoints()
 
     def __str__(self):
         return f"RawImageData={self.__rawImageData}; transformationMatrix={self.__transformationMatrix}; warpedPoints={self.__warpedPoints}"
 
-    def __getRawImageData(self, imgPath):
-        return cv2.imread(imgPath)
+    def __getRawImageData(self, imgPath, scaleFactor):
+        if (scaleFactor == 1.0):
+            return cv2.imread(imgPath)
+        else:
+            rawImgData = cv2.imread(imgPath)
+            width = int(rawImgData.shape[1] * scaleFactor)
+            height = int(rawImgData.shape[0] * scaleFactor)
+            return cv2.resize(rawImgData, (width, height))
     
     def __convertAngleToThreeSixty(self, angleToConvert):
         temp = 180 - abs(angleToConvert)
@@ -72,22 +78,22 @@ class ImageDataGpsTransform:
         return float(data)
     
     def __determineGroundSamplingDistance(self, imgPath):
-        # focalLength = 0.5 # cm
-        # width = 4000.0 # pixels
-        # height = 3000.0 # pixels
-        # sensorWidth = 0.616 # cm
-        # sensorHeight = 0.455 # cm
+        focalLength = 0.5 # cm
+        width = self.__rawImageData.shape[1] # pixels
+        height = self.__rawImageData.shape[0] # pixels
+        sensorWidth = 0.616 # cm
+        sensorHeight = 0.455 # cm
 
-        focalLength = 0.7 # cm
-        width = 4000.0 # pixels
-        height = 3000.0 # pixels
-        sensorWidth = 1.0 # cm
-        sensorHeight = 0.75 # cm
+        # focalLength = 0.7 # cm
+        # width = self.__rawImageData.shape[1] # pixels
+        # height = self.__rawImageData.shape[0] # pixels
+        # sensorWidth = 1.0 # cm
+        # sensorHeight = 0.75 # cm
 
         baseAltitude = self.__fetchRelativeAltitude(imgPath)
 
-        GSDh = ((baseAltitude*100)*sensorHeight)/(focalLength*3000)
-        GSDw = ((baseAltitude*100)*sensorWidth)/(focalLength*4000)
+        GSDh = ((baseAltitude*100)*sensorHeight)/(focalLength*height)
+        GSDw = ((baseAltitude*100)*sensorWidth)/(focalLength*width)
         return GSDh if (GSDh > GSDw) else GSDw # in cm/px
         
     def __determineShiftToBaseYX(self, imgPath):
