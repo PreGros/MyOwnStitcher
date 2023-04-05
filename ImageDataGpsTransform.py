@@ -83,17 +83,17 @@ class ImageDataGpsTransform:
     def __determineGroundSamplingDistance(self, imgPath):
         global BASEALTITUDE
 
-        focalLength = 0.5 # cm
-        width = self.__rawImageData.shape[1] # pixels
-        height = self.__rawImageData.shape[0] # pixels
-        sensorWidth = 0.616 # cm
-        sensorHeight = 0.455 # cm
-
-        # focalLength = 0.7 # cm
+        # focalLength = 0.5 # cm
         # width = self.__rawImageData.shape[1] # pixels
         # height = self.__rawImageData.shape[0] # pixels
-        # sensorWidth = 1.0 # cm
-        # sensorHeight = 0.75 # cm
+        # sensorWidth = 0.616 # cm
+        # sensorHeight = 0.455 # cm
+
+        focalLength = 0.7 # cm
+        width = self.__rawImageData.shape[1] # pixels
+        height = self.__rawImageData.shape[0] # pixels
+        sensorWidth = 1.0 # cm
+        sensorHeight = 0.75 # cm
 
         BASEALTITUDE = self.__fetchRelativeAltitude(imgPath) # global cuz for future use in gimbal pitch correction..
 
@@ -108,10 +108,10 @@ class ImageDataGpsTransform:
         data = data[xmpInvestigatedStart+len('drone-dji:GimbalPitchDegree="'):]
         xmpInvestigatedStart = data.find('"')
         data = data[:xmpInvestigatedStart]
-        return float(data)
+        return round(float(data))
     
-    def __gimbapCorrValues(self, imgPath):
-        angle = 90 + self.__fetchGimbalPitchDegree(imgPath)
+    def __gimbalPitchCorrValues(self, imgPath, gimbalPitchDegree):
+        angle = 90 + gimbalPitchDegree
         hypotenuse = math.tan(math.radians(angle)) * BASEALTITUDE # in metres
 
         yawDegree = self.__fetchFlightYawDegree(imgPath)
@@ -121,8 +121,6 @@ class ImageDataGpsTransform:
         opposite = math.sin(math.radians(angle)) * hypotenuse # y
 
         return adjacent, opposite
-        # a = a + (adjacent)# - 2.917449
-        # b = b + (opposite)# + 5.418291
         
     def __determineShiftToBaseYX(self, imgPath):
         global GSD
@@ -138,9 +136,12 @@ class ImageDataGpsTransform:
         latitude = latitude if (data.gps_latitude_ref == 'N') else -latitude
         longitude = longitude if (data.gps_longitude_ref == 'E') else -longitude
 
+        gimbalPitchDegree = self.__fetchGimbalPitchDegree(imgPath)
+
         if (GSD == -1):
             GSD = self.__determineGroundSamplingDistance(imgPath)
-            BASESHIFTGIMBALCORR = self.__gimbapCorrValues(imgPath)
+            if (gimbalPitchDegree != -90.0):
+                BASESHIFTGIMBALCORR = self.__gimbalPitchCorrValues(imgPath, gimbalPitchDegree)
             BASELONGITUDE = longitude
             BASELATITUDE = latitude
             return (0, 0)
@@ -158,11 +159,11 @@ class ImageDataGpsTransform:
 
 
 
+        if (gimbalPitchDegree != -90.0):
+            gimBalCorrX, gimbalCorrY = self.__gimbalPitchCorrValues(imgPath, gimbalPitchDegree)
 
-        gimBalCorrX, gimbalCorrY = self.__gimbapCorrValues(imgPath)
-
-        a = a + gimBalCorrX - BASESHIFTGIMBALCORR[0]
-        b = b + gimbalCorrY - BASESHIFTGIMBALCORR[1]
+            a = a + gimBalCorrX - BASESHIFTGIMBALCORR[0] # BASESHIFTGIMBALCORR - I'm counter shifting all images to shift the base
+            b = b + gimbalCorrY - BASESHIFTGIMBALCORR[1]
 
 
 
@@ -173,8 +174,6 @@ class ImageDataGpsTransform:
 
         translateX = int((x*100)/GSD)
         translateY = int((y*100)/GSD)*(-1) # -1 => gps coords to image coords correction
-
-        # print(translateY, translateX)
 
         return (translateY, translateX)
     
