@@ -9,6 +9,8 @@ BASELATITUDE = 0
 BASEANGLE = -1
 BASEALTITUDE = -1
 
+BASESHIFTGIMBALCORR = (0, 0)
+
 
 class ImageDataGpsTransform:
 
@@ -107,11 +109,26 @@ class ImageDataGpsTransform:
         xmpInvestigatedStart = data.find('"')
         data = data[:xmpInvestigatedStart]
         return float(data)
+    
+    def __gimbapCorrValues(self, imgPath):
+        angle = 90 + self.__fetchGimbalPitchDegree(imgPath)
+        hypotenuse = math.tan(math.radians(angle)) * BASEALTITUDE # in metres
+
+        yawDegree = self.__fetchFlightYawDegree(imgPath)
+        angle = 90 - yawDegree # trick
+
+        adjacent = math.cos(math.radians(angle)) * hypotenuse # x
+        opposite = math.sin(math.radians(angle)) * hypotenuse # y
+
+        return adjacent, opposite
+        # a = a + (adjacent)# - 2.917449
+        # b = b + (opposite)# + 5.418291
         
     def __determineShiftToBaseYX(self, imgPath):
         global GSD
         global BASELONGITUDE
         global BASELATITUDE
+        global BASESHIFTGIMBALCORR
     
         with open(imgPath, 'rb') as source:
             data = exifImage(source)
@@ -123,6 +140,7 @@ class ImageDataGpsTransform:
 
         if (GSD == -1):
             GSD = self.__determineGroundSamplingDistance(imgPath)
+            BASESHIFTGIMBALCORR = self.__gimbapCorrValues(imgPath)
             BASELONGITUDE = longitude
             BASELATITUDE = latitude
             return (0, 0)
@@ -141,36 +159,10 @@ class ImageDataGpsTransform:
 
 
 
+        gimBalCorrX, gimbalCorrY = self.__gimbapCorrValues(imgPath)
 
-
-
-
-
-        angle = 90 + self.__fetchGimbalPitchDegree(imgPath)
-
-        hypotenuse = math.tan(math.radians(angle)) * BASEALTITUDE # in metres
-
-        # print(hypotenuse)
-
-        yawDegree = self.__fetchFlightYawDegree(imgPath)
-
-        yawDegree = -90
-
-        angle = 90 - yawDegree # trick
-
-        adjacent = math.cos(math.radians(angle)) * hypotenuse # x
-
-        opposite = math.sin(math.radians(angle)) * hypotenuse # y
-
-        print(opposite, adjacent)
-
-
-        a = a + (adjacent)# - 2.917449
-        b = b + (opposite)# + 5.418291
-
-        
-
-
+        a = a + gimBalCorrX - BASESHIFTGIMBALCORR[0]
+        b = b + gimbalCorrY - BASESHIFTGIMBALCORR[1]
 
 
 
