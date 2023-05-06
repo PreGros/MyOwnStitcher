@@ -53,6 +53,7 @@ class ImageDataGpsTransform:
         else:
             return imgAngle + (360 - BASEANGLE)
         
+    # Harvesinův vzorec převzatý z https://www.movable-type.co.uk/scripts/latlong.html
     def __getDistance(self, pt1, pt2):
         R = 6371e3 # metres
         lat1 = math.radians(pt1[0])
@@ -78,17 +79,17 @@ class ImageDataGpsTransform:
         return float(data)
     
     def __determineGroundSamplingDistance(self, imgPath):
-        focalLength = 0.5 # cm
-        width = self.__rawImageData.shape[1] # pixels
-        height = self.__rawImageData.shape[0] # pixels
-        sensorWidth = 0.616 # cm
-        sensorHeight = 0.455 # cm
-
-        # focalLength = 0.7 # cm
+        # focalLength = 0.5 # cm
         # width = self.__rawImageData.shape[1] # pixels
         # height = self.__rawImageData.shape[0] # pixels
-        # sensorWidth = 1.0 # cm
-        # sensorHeight = 0.75 # cm
+        # sensorWidth = 0.616 # cm
+        # sensorHeight = 0.455 # cm
+
+        focalLength = 0.7 # cm
+        width = self.__rawImageData.shape[1] # pixels
+        height = self.__rawImageData.shape[0] # pixels
+        sensorWidth = 1.0 # cm
+        sensorHeight = 0.75 # cm
 
         baseAltitude = self.__fetchRelativeAltitude(imgPath)
 

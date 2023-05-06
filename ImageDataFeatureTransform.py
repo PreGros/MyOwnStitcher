@@ -26,6 +26,7 @@ class ImageDataFeatureTransform:
 
         flann = cv2.FlannBasedMatcher(index_params, search_params)
         matches = flann.knnMatch(prevImageData.__foundDescriptors,self.__foundDescriptors,k=2)
+        # print(matches[0])
 
         # store all the good matches as per Lowe's ratio test.
         good = []
@@ -35,7 +36,15 @@ class ImageDataFeatureTransform:
 
         dst_pts = np.float32([ prevImageData.__foundKeyPoints[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
         src_pts = np.float32([ self.__foundKeyPoints[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-        H, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,reprojectionThreshold)
+        try:
+            H, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,reprojectionThreshold)
+        except:
+            print("Mezi snímky nebylo nalezeno dostatek obrazových příznaků!")
+            quit()
+
+        # print(prevImageData.__foundKeyPoints[good[0].queryIdx].pt)
+        # print(self.__foundKeyPoints[good[0].trainIdx].pt)
+        # print(good[0].distance)
 
         return H
 
