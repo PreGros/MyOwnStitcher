@@ -26,7 +26,6 @@ class ImageDataFeatureTransform:
 
         flann = cv2.FlannBasedMatcher(index_params, search_params)
         matches = flann.knnMatch(prevImageData.__foundDescriptors,self.__foundDescriptors,k=2)
-        # print(matches[0])
 
         # store all the good matches as per Lowe's ratio test.
         good = []
@@ -41,10 +40,6 @@ class ImageDataFeatureTransform:
         except:
             print("Mezi snímky nebylo nalezeno dostatek obrazových příznaků!")
             quit()
-
-        # print(prevImageData.__foundKeyPoints[good[0].queryIdx].pt)
-        # print(self.__foundKeyPoints[good[0].trainIdx].pt)
-        # print(good[0].distance)
 
         return H
 
