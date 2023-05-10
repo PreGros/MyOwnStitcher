@@ -1,4 +1,5 @@
 from stitcher import stitchDataset
+from stitcherFtS import stitchDatasetFt
 from ImagesList import * 
 import os.path
 import argparse
@@ -45,7 +46,7 @@ if (args.gpsS):
 if (args.ftS):
     imgDataList = ImagesList()
     imgDataList.runFeatureTransform(args.infile, args.scale)
-    stitchDataset(imgDataList.imageDataList, args.outputName, args.mask)
+    stitchDatasetFt(imgDataList.imageDataList, args.outputName, args.mask)
 
 # End timer
 end_time = time.time()
