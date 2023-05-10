@@ -1,8 +1,8 @@
 import cv2
 
-class ImageDataFeatureTransform:
+class ImageDataContinuousFeatureTransform:
 
-    def __init__(self, imagePath: str, prevImageData: 'ImageDataFeatureTransform', scaleFactor):
+    def __init__(self, imagePath: str, scaleFactor):
         self.__path = imagePath
         self.__rawImageData = self.__getRawImageData(imagePath, scaleFactor)
         self.__foundKeyPoints, self.__foundDescriptors = self.__getFeatures()

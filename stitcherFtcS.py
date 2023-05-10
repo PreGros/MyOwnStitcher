@@ -37,7 +37,7 @@ def addMaskedImage(resultMap, backgroundImg):
 
     return np.where(alpha==(0,0,0), backgroundImg, front)
 
-def stitchDatasetFt(imgDataList, outputName, maskFlag):
+def stitchDatasetFtc(imgDataList, outputName, maskFlag):
 
     if (len(imgDataList) < 1):
         raise Exception("Stitcher need at least one image")

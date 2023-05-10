@@ -1,3 +1,4 @@
+from ImageDataContinuousFeatureTransform import *
 from ImageDataFeatureTransform import *
 from ImageDataGpsTransform import *
 import glob
@@ -22,5 +23,9 @@ class ImagesList:
         for imgPath in pathsList:
             self.imageDataList.append(ImageDataGpsTransform(imgPath, scaleFactor))
         
-        
+    def runFeatureContinuousTransform(self, path: str, scaleFactor):
+        pathsList = sorted(glob.glob("{0}/*.jpg".format(path)))
+
+        for imgPath in pathsList:
+            self.imageDataList.append(ImageDataContinuousFeatureTransform(imgPath, scaleFactor))
         
