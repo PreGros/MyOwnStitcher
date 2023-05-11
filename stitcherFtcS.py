@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 
+PREVMAPYX = 0
+IMGBIGGERSIZE = 0
+
 def getMinMax(resultMap, imgData, homography):
     resultMapHeight, resultMapWidth = resultMap.shape[:2]
     imageHeight, imageWidth = (imgData.rawImageData).shape[:2]
@@ -34,13 +37,26 @@ def addMaskedImage(resultMap, backgroundImg):
     # extract bgr channels from foreground image
     front = res[:,:,0:3]
 
-
     return np.where(alpha==(0,0,0), backgroundImg, front)
+
+def checkResultMapDim(resultMapYX, currImgYX, i):
+    global IMGBIGGERSIZE
+
+    if (IMGBIGGERSIZE == 0):
+        IMGBIGGERSIZE = currImgYX[0] if (currImgYX[0] > currImgYX[1]) else currImgYX[1]
+
+    mapBiggerSize = resultMapYX[0] if (resultMapYX[0] > resultMapYX[1]) else resultMapYX[1]
+    limitDim = IMGBIGGERSIZE+(IMGBIGGERSIZE*0.5*(i+1))
+
+    return mapBiggerSize > limitDim
+
 
 def stitchDatasetFtc(imgDataList, outputName, maskFlag):
 
     if (len(imgDataList) < 1):
         raise Exception("Stitcher need at least one image")
+    
+    global PREVMAPYX
 
     reprojectionThreshold = 5.0
 
@@ -75,10 +91,6 @@ def stitchDatasetFtc(imgDataList, outputName, maskFlag):
                 cv2.imwrite("outputMosaics/{0}.png".format(outputName), resultMap)
                 print("FAIL")
                 quit()
-
-
-        print(len(foundKeyPoints))
-        print(len(imgData.foundKeyPoints))
 
         matches = flann.knnMatch(foundDescriptors, imgData.foundDescriptors,k=2)
 
@@ -117,5 +129,18 @@ def stitchDatasetFtc(imgDataList, outputName, maskFlag):
         outputImg[translation_dist[1]:translation_dist[1]+resultMap.shape[0], translation_dist[0]:translation_dist[0]+resultMap.shape[1]] = resultMap
 
         resultMap = outputImg
+
+
+        if (checkResultMapDim(resultMap.shape[:2], (imgData.rawImageData).shape[:2], i)):
+            print("CHYBA! - Velikost výsledné mapy se zvětšila z {0}x{1} na {2}x{3} pixelů! Chybná mapa byla uložena jako {4}_dimError".format(PREVMAPYX[1], 
+                                                                                                                                               PREVMAPYX[0],
+                                                                                                                                               resultMap.shape[1],
+                                                                                                                                               resultMap.shape[0],
+                                                                                                                                               outputName))
+            cv2.imwrite("outputMosaics/{0}_errorDim.png".format(outputName), resultMap)
+            quit()
+
+        PREVMAPYX = resultMap.shape[:2]
+
 
     cv2.imwrite("outputMosaics/{0}.png".format(outputName), resultMap)

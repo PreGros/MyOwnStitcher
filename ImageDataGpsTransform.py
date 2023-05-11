@@ -55,7 +55,7 @@ class ImageDataGpsTransform:
         
     # Harvesinův vzorec převzatý z https://www.movable-type.co.uk/scripts/latlong.html
     def __getDistance(self, pt1, pt2):
-        R = 6371e3 # metres
+        R = 6371e3 # metry
         lat1 = math.radians(pt1[0])
         lat2 = math.radians(pt2[0])
         Δlat = math.radians(pt2[0]-pt1[0])
@@ -64,7 +64,7 @@ class ImageDataGpsTransform:
         a = math.sin(Δlat/2) * math.sin(Δlat/2) + math.cos(lat1) * math.cos(lat2) * math.sin(Δlon/2) * math.sin(Δlon/2)
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
-        return R * c # in metres
+        return R * c # v metrech
     
     def __convertToDegrees(self, dmsValues):
         return dmsValues[0] + dmsValues[1] / 60.0 + dmsValues[2] / 3600.0
