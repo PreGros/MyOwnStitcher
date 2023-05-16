@@ -4,11 +4,13 @@ import math
 import time
 from exif import Image as exifImage
 
+# Nastavení globálních proměnných
 GSD = -1
 BASELONGITUDE = 0
 BASELATITUDE = 0
 BASEANGLE = -1
 
+# Třída pro zpracování snímků pomocí metody polohovacích metadat 
 
 class ImageDataGpsTransform:
 
@@ -22,6 +24,7 @@ class ImageDataGpsTransform:
     def __str__(self):
         return f"RawImageData={self.__rawImageData}; transformationMatrix={self.__transformationMatrix}; warpedPoints={self.__warpedPoints}"
 
+    # Uložení maticového zastoupení zpracovávaného snímku, který může být zmenšený podle vstupních argumentů
     def __getRawImageData(self, imgPath, scaleFactor):
         if (scaleFactor == 1.0):
             return cv2.imread(imgPath)
@@ -31,10 +34,12 @@ class ImageDataGpsTransform:
             height = int(rawImgData.shape[0] * scaleFactor)
             return cv2.resize(rawImgData, (width, height))
     
+    # Přepočítání formátu 0 až -180 stupňů na formát 0 až 360 stupňů
     def __convertAngleToThreeSixty(self, angleToConvert):
         temp = 180 - abs(angleToConvert)
         return 180 + temp
     
+    # Získání natočení dronu z xml dat snímku
     def __fetchFlightYawDegree(self, img):
         fd = open(img, encoding = 'latin-1')
         data = fd.read()
@@ -48,6 +53,7 @@ class ImageDataGpsTransform:
 
         return angle
     
+    # Výpočet potřebného úhlu, který natočí aktuálně zpracovávaný snímek do natočení referenčního snímku ve směru proti hodinových ručiček
     def __determineAngleToBase(self, img):
         imgAngle = self.__fetchFlightYawDegree(img)
 
@@ -69,9 +75,11 @@ class ImageDataGpsTransform:
 
         return R * c # v metrech
     
+    # Převedení zeměpisných souřadnic ze stupnů, minut a vteřin na decimální stupně
     def __convertToDegrees(self, dmsValues):
         return dmsValues[0] + dmsValues[1] / 60.0 + dmsValues[2] / 3600.0
     
+    # Získání relativní výšky dronu z xml dat snímku
     def __fetchRelativeAltitude(self, img):
         fd = open(img, encoding = 'latin-1')
         data = fd.read()
@@ -81,6 +89,7 @@ class ImageDataGpsTransform:
         data = data[:xmpInvestigatedStart]
         return float(data)
     
+    # Výpočet GSD podle referečního snímku
     def __determineGroundSamplingDistance(self, imgPath):
         # focalLength = 0.5 # cm
         # width = self.__rawImageData.shape[1] # pixels
@@ -100,11 +109,13 @@ class ImageDataGpsTransform:
         GSDw = ((baseAltitude*100)*sensorWidth)/(focalLength*width)
         return GSDh if (GSDh > GSDw) else GSDw # in cm/px
         
+    # Výpočet posunu podle polohovacích metadat a GSD
     def __determineShiftToBaseYX(self, imgPath):
         global GSD
         global BASELONGITUDE
         global BASELATITUDE
     
+        # Načti zeměpisné souřadnice
         with open(imgPath, 'rb') as source:
             data = exifImage(source)
         latitude = self.__convertToDegrees(data.gps_latitude)
@@ -112,30 +123,40 @@ class ImageDataGpsTransform:
         latitude = latitude if (data.gps_latitude_ref == 'N') else -latitude
         longitude = longitude if (data.gps_longitude_ref == 'E') else -longitude
 
+        # Pokud se jedná o první snímek spočítej GSD
         if (GSD == -1):
             GSD = self.__determineGroundSamplingDistance(imgPath)
             BASELONGITUDE = longitude
             BASELATITUDE = latitude
             return (0, 0)
 
+        # Nastavení potřebných bodů pro výpočet 'x' a 'y' souřadnice posunu
         A = (BASELATITUDE, BASELONGITUDE)
         B = (BASELATITUDE, longitude)
         D = (latitude, BASELONGITUDE)
 
-        AB = self.__getDistance(A,B)
-        AD = self.__getDistance(A,D)
+        # Výpočet vzdáleností mezi body
+        AB = self.__getDistance(A,B) # x
+        AD = self.__getDistance(A,D) # y
 
+        # Vypočítaná vzdálenost bude podle Haversinova vzorce vždy kladná
+        # Je tedy nutná kontrola, jestli nemá být nějaká hodnota záporná
         a = AB if (BASELONGITUDE<longitude) else -AB
         b = AD if (BASELATITUDE<latitude) else -AD
 
-        x = a*math.cos(math.radians(BASEANGLE)) - b*math.sin(math.radians(BASEANGLE)) # axis rotation
+        # Vypočítané hodnoty 'a','b' jsou nyní posuny v x-ové a y-ové ose podle souřadného systému sever, východ..
+        # Protože se výsledná mapa orientuje podle referenčního (prvního) snímku, musejí se posuny přepočítat.
+        # Posuny se můžou vzít jako souřadnice bodu, pokud počátkem je referenční snímek. Pro tento bod se najdou nové souřadnice rotací souřadného systému kolem středu o úhel natočení referenčního snímku.
+        x = a*math.cos(math.radians(BASEANGLE)) - b*math.sin(math.radians(BASEANGLE))
         y = a*math.sin(math.radians(BASEANGLE)) + b*math.cos(math.radians(BASEANGLE))
 
+        # Přepočet vzdálenosti na pixely pomocí GSD
         translateX = int((x*100)/GSD)
-        translateY = int((y*100)/GSD)*(-1) # -1 => gps coords to image coords correction
+        translateY = int((y*100)/GSD)*(-1) # -1 => úprava y-ové souřadnice, protože v maticovém zastoupení snímku je y-ová naopak
 
         return (translateY, translateX)
     
+    # Výpočet transformační matice podle vypočítaného posunu a rotační matice
     def __determineTransformationMatrix(self, shiftToBaseYX, angleToBase):
         height, width = self.rawImageData.shape[:2]
         centerY, centerX = (height//2,width//2)
@@ -152,7 +173,7 @@ class ImageDataGpsTransform:
         
 
 
-
+    # Získání transformační matice výpočtem posunu a úhlu, o který se natočení aktuálního snímku dostane do stejného natočení jako má referenční snímek
     def __getTransformationMatrix(self, imgPath):
         global BASEANGLE
         angleToBase = 0
@@ -171,7 +192,7 @@ class ImageDataGpsTransform:
 
 
         
-
+    # Předpočítání hran snímku deformované vypočítanou transformační maticí
     def getWarpedPoints(self):
         height, width = (self.__rawImageData).shape[:2]
         points = np.float32([[0,0], [0, height], [width,height], [width, 0]]).reshape(-1,1,2)
