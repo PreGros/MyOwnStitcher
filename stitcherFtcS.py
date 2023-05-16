@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import time
 
 PREVMAPYX = 0
 IMGBIGGERSIZE = 0
@@ -51,7 +52,7 @@ def checkResultMapDim(resultMapYX, currImgYX, i):
     return mapBiggerSize > limitDim
 
 
-def stitchDatasetFtc(imgDataList, outputName, maskFlag):
+def stitchDatasetFtc(imgDataList, timeDetect, outputName, maskFlag):
 
     if (len(imgDataList) < 1):
         raise Exception("Stitcher need at least one image")
@@ -67,19 +68,15 @@ def stitchDatasetFtc(imgDataList, outputName, maskFlag):
 
     MIN_MATCH_COUNT = 10000
     sift = cv2.SIFT_create(MIN_MATCH_COUNT)
-
+    i = 0
+    sumTime = 0
 
     resultMap = imgDataList[0].rawImageData
 
     for i in range(len(imgDataList) - 1):
-        imgData = imgDataList[i+1]
+        imgData = imgDataList[i+1]        
 
-        print("Zpracovává se obrázek číslo {0} z {1}".format(i+2, len(imgDataList)))
-        print(imgData.path)
-
-        
-
-
+        startDetect = time.time()
         
         if (i == 0):
             foundKeyPoints = imgDataList[0].foundKeyPoints
@@ -109,7 +106,7 @@ def stitchDatasetFtc(imgDataList, outputName, maskFlag):
             print("Mezi snímky nebylo nalezeno dostatek obrazových příznaků!")
             quit()
              
-
+        sumTime = sumTime + (time.time() - startDetect)
 
 
 
@@ -128,19 +125,20 @@ def stitchDatasetFtc(imgDataList, outputName, maskFlag):
 
         outputImg[translation_dist[1]:translation_dist[1]+resultMap.shape[0], translation_dist[0]:translation_dist[0]+resultMap.shape[1]] = resultMap
 
-        resultMap = outputImg
+        resultMap = outputImg   
 
 
         if (checkResultMapDim(resultMap.shape[:2], (imgData.rawImageData).shape[:2], i)):
-            print("CHYBA! - Velikost výsledné mapy se zvětšila z {0}x{1} na {2}x{3} pixelů! Chybná mapa byla uložena jako {4}_dimError".format(PREVMAPYX[1], 
+            print("CHYBA! - Velikost výsledné mapy se zvětšila z {0}x{1} na {2}x{3} pixelů! Chybná mapa byla uložena jako \'{4}_dimError\'".format(PREVMAPYX[1], 
                                                                                                                                                PREVMAPYX[0],
                                                                                                                                                resultMap.shape[1],
                                                                                                                                                resultMap.shape[0],
                                                                                                                                                outputName))
+            print("Výpočet transformací u všech snímků trval průměrně {0} sekund".format((sumTime / (i+1)) + timeDetect))
             cv2.imwrite("outputMosaics/{0}_errorDim.png".format(outputName), resultMap)
             quit()
 
         PREVMAPYX = resultMap.shape[:2]
 
-
     cv2.imwrite("outputMosaics/{0}.png".format(outputName), resultMap)
+    print("Výpočet transformací u všech snímků trval průměrně {0} sekund".format((sumTime / (i+1)) + timeDetect))

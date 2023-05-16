@@ -43,17 +43,16 @@ def maskImage(img, ouputImg, backgroundImg, combinedMatrix):
     return backgroundImg
 
 
-def stitchDataset(imgDataList, outputName, maskFlag):
+def stitchDataset(imgDataList, timeSpent, outputName, maskFlag):
 
     if (len(imgDataList) < 1):
-        raise Exception("Stitcher need at least one image")
+        raise Exception("Pro vytvoření mapy je potřeba alespoň jeden snímek.")
 
     # First need to create canvas with enough size for all transformed images
     canvasMinXY, canvasMaxXY = getMinMax(imgDataList)
     canvas = np.zeros((canvasMaxXY[1]-canvasMinXY[1],canvasMaxXY[0]-canvasMinXY[0],3),dtype=int)
 
     shiftToStartYX = (abs(canvasMinXY[1]), abs(canvasMinXY[0]))
-
 
     for i in range(len(imgDataList)):
         imgData = imgDataList.pop()
@@ -77,3 +76,4 @@ def stitchDataset(imgDataList, outputName, maskFlag):
         canvas[shiftToStartYX[0]+imgMinXY[1]:shiftToStartYX[0]+imgMinXY[1]+outputImg.shape[0], shiftToStartYX[1]+imgMinXY[0]:shiftToStartYX[1]+imgMinXY[0]+outputImg.shape[1]] = outputImg
 
     cv2.imwrite("outputMosaics/{0}.png".format(outputName), canvas)
+    print("Výpočet transformací u všech snímků trval průměrně {0} sekund".format(timeSpent))

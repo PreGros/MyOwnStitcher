@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import math
+import time
 from exif import Image as exifImage
 
 GSD = -1
@@ -13,7 +14,9 @@ class ImageDataGpsTransform:
 
     def __init__(self, imagePath: str, scaleFactor):
         self.__rawImageData = self.__getRawImageData(imagePath, scaleFactor)
+        startComputing = time.time()
         self.__transformationMatrix = self.__getTransformationMatrix(imagePath)
+        self.__timeSpent = time.time() - startComputing
         self.__warpedPoints = self.getWarpedPoints()
 
     def __str__(self):
@@ -185,3 +188,7 @@ class ImageDataGpsTransform:
     @property
     def warpedPoints(self):
         return self.__warpedPoints
+    
+    @property
+    def timeSpent(self):
+        return self.__timeSpent

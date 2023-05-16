@@ -1,12 +1,15 @@
 import cv2
 import numpy as np
+import time
 
 class ImageDataFeatureTransform:
 
     def __init__(self, imagePath: str, prevImageData: 'ImageDataFeatureTransform', scaleFactor):
         self.__rawImageData = self.__getRawImageData(imagePath, scaleFactor)
+        startCompute = time.time()
         self.__foundKeyPoints, self.__foundDescriptors = self.__getFeatures()
-        self.__transformationMatrix = self.__getTransformationMatrix(prevImageData)
+        self.__transformationMatrix = self.__getTransformationMatrix(prevImageData, imagePath)
+        self.__timeSpent = time.time() - startCompute
         self.__warpedPoints = self.__getWarpedPoints()
 
     def __str__(self):
@@ -17,7 +20,7 @@ class ImageDataFeatureTransform:
         sift = cv2.SIFT_create(MIN_MATCH_COUNT)
         return sift.detectAndCompute(cv2.cvtColor(self.__rawImageData, cv2.COLOR_BGR2GRAY),None)
 
-    def __getHomography(self, prevImageData: 'ImageDataFeatureTransform'):
+    def __getHomography(self, prevImageData: 'ImageDataFeatureTransform', imagePath: str):
         reprojectionThreshold = 5.0
 
         FLANN_INDEX_KDTREE = 0
@@ -38,7 +41,7 @@ class ImageDataFeatureTransform:
         try:
             H, _ = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,reprojectionThreshold)
         except:
-            print("Mezi snímky nebylo nalezeno dostatek obrazových příznaků!")
+            print("U snímku s názvem \'{0}\' se nepodařilo najít obrazové příznaky!".format(imagePath))
             quit()
 
         return H
@@ -52,9 +55,9 @@ class ImageDataFeatureTransform:
             height = int(rawImgData.shape[0] * scaleFactor)
             return cv2.resize(rawImgData, (width, height))
 
-    def __getTransformationMatrix(self, prevImageData: 'ImageDataFeatureTransform'): 
+    def __getTransformationMatrix(self, prevImageData: 'ImageDataFeatureTransform', imagePath: str): 
         if (prevImageData != None):
-            homographyMatrix = self.__getHomography(prevImageData)
+            homographyMatrix = self.__getHomography(prevImageData, imagePath)
             return prevImageData.__transformationMatrix @ homographyMatrix
         else:
             T0 = np.float64([
@@ -79,3 +82,7 @@ class ImageDataFeatureTransform:
     @property
     def warpedPoints(self):
         return self.__warpedPoints
+    
+    @property
+    def timeSpent(self):
+        return self.__timeSpent

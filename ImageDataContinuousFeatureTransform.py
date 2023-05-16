@@ -1,10 +1,12 @@
 import cv2
+import time
 
 class ImageDataContinuousFeatureTransform:
 
     def __init__(self, imagePath: str, scaleFactor):
-        self.__path = imagePath
+        startDetect = time.time()
         self.__rawImageData = self.__getRawImageData(imagePath, scaleFactor)
+        self.__timeSpent = time.time() - startDetect
         self.__foundKeyPoints, self.__foundDescriptors = self.__getFeatures()
 
     def __str__(self):
@@ -37,5 +39,5 @@ class ImageDataContinuousFeatureTransform:
         return self.__foundDescriptors
     
     @property
-    def path(self):
-        return self.__path
+    def timeSpent(self):
+        return self.__timeSpent

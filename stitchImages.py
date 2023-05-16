@@ -42,21 +42,17 @@ if ((int(args.gpsS) + int(args.ftS) + int(args.ftcS)) > 1):
 if (args.gpsS):
     imgDataList = ImagesList()
     imgDataList.runGPSTransform(args.infile, args.scale)
-    stitchDataset(imgDataList.imageDataList, args.outputName, args.mask)
+    stitchDataset(imgDataList.imageDataList, imgDataList.timeSpent, args.outputName, args.mask)
 
 if (args.ftS):
     imgDataList = ImagesList()
     imgDataList.runFeatureTransform(args.infile, args.scale)
-    stitchDataset(imgDataList.imageDataList, args.outputName, args.mask)
+    stitchDataset(imgDataList.imageDataList, imgDataList.timeSpent, args.outputName, args.mask)
 
 if (args.ftcS):
     imgDataList = ImagesList()
     imgDataList.runFeatureContinuousTransform(args.infile, args.scale)
-    stitchDatasetFtc(imgDataList.imageDataList, args.outputName, args.mask)
+    stitchDatasetFtc(imgDataList.imageDataList, imgDataList.timeSpent, args.outputName, args.mask)
 
-# End timer
-end_time = time.time()
 
-# Calculate elapsed time
-elapsed_time = end_time - start_time
-print("Elapsed time: ", elapsed_time) 
+print("Celkový čas: ", time.time() - start_time) 
