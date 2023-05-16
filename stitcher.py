@@ -1,3 +1,11 @@
+##########################################################################
+##                                                                      ##
+##          Autor: Tomáš Zaviačič                                       ##
+##          Jméno souboru: stitcher                                     ##
+##          Projekt: Automatická tvorba mapy dronem                     ##
+##                                                                      ##
+##########################################################################
+
 import numpy as np
 import cv2
 

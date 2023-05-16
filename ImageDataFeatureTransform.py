@@ -1,3 +1,11 @@
+##########################################################################
+##                                                                      ##
+##          Autor: Tomáš Zaviačič                                       ##
+##          Jméno souboru: ImageDataFeatureTransform                    ##
+##          Projekt: Automatická tvorba mapy dronem                     ##
+##                                                                      ##
+##########################################################################
+
 import cv2
 import numpy as np
 import time

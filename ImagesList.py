@@ -1,3 +1,11 @@
+##########################################################################
+##                                                                      ##
+##          Autor: Tomáš Zaviačič                                       ##
+##          Jméno souboru: ImagesList                                   ##
+##          Projekt: Automatická tvorba mapy dronem                     ##
+##                                                                      ##
+##########################################################################
+
 from ImageDataContinuousFeatureTransform import *
 from ImageDataFeatureTransform import *
 from ImageDataGpsTransform import *

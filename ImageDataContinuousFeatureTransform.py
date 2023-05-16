@@ -1,3 +1,11 @@
+##########################################################################
+##                                                                      ##
+##          Autor: Tomáš Zaviačič                                       ##
+##          Jméno souboru: ImageDataContinuousFeatureTransform          ##
+##          Projekt: Automatická tvorba mapy dronem                     ##
+##                                                                      ##
+##########################################################################
+
 import cv2
 import time
 

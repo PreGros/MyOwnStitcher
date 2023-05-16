@@ -1,3 +1,11 @@
+##########################################################################
+##                                                                      ##
+##          Autor: Tomáš Zaviačič                                       ##
+##          Jméno souboru: stitchImages                                 ##
+##          Projekt: Automatická tvorba mapy dronem                     ##
+##                                                                      ##
+##########################################################################
+
 from stitcher import stitchDataset
 from stitcherFtcS import stitchDatasetFtc
 from ImagesList import * 
